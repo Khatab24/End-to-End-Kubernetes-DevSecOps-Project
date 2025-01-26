@@ -18,16 +18,16 @@ pipeline {
                 git branch: 'master', url: 'https://github.com/Khatab24/End-to-End-Kubernetes-DevSecOps-Project.git'
             }
         }
-        stage('Sonarqube Analysis') {
-            steps {
-                dir('Tetris-V1') {
-                    withSonarQubeEnv('sonar-server') {
-                        sh ''' ${SCANNER_HOME}/bin/sonar-scanner -Dsonar.projectName=TetrisVersion1.0 \
-                        -Dsonar.projectKey=TetrisVersion1.0 '''
-                    }
-                }
-            }
-        }
+        //stage('Sonarqube Analysis') {
+          //  steps {
+            //    dir('Tetris-V1') {
+             //       withSonarQubeEnv('sonar-server') {
+                 //       sh ''' ${SCANNER_HOME}/bin/sonar-scanner -Dsonar.projectName=TetrisVersion1.0 \
+                //        -Dsonar.projectKey=TetrisVersion1.0 '''
+              //      }
+            //    }
+        //    }
+  //      }
         stage('Installing Dependencies') {
             steps {
                 dir('Tetris-V1') {
