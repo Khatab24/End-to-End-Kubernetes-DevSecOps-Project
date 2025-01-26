@@ -18,39 +18,7 @@ pipeline {
                 git branch: 'master', url: 'https://github.com/Khatab24/End-to-End-Kubernetes-DevSecOps-Project.git'
             }
         }
-        //stage('Sonarqube Analysis') {
-          //  steps {
-            //    dir('Tetris-V1') {
-             //       withSonarQubeEnv('sonar-server') {
-                 //       sh ''' ${SCANNER_HOME}/bin/sonar-scanner -Dsonar.projectName=TetrisVersion1.0 \
-                //        -Dsonar.projectKey=TetrisVersion1.0 '''
-              //      }
-            //    }
-        //    }
-  //      }
-    //    stage('Installing Dependencies') {
-      //      steps {
-       //         dir('Tetris-V1') {
-       //             sh 'npm install'
-       //         }
-       //     }
-    //    }
-        stage('OWASP Dependency-Check Scan') {
-            steps {
-                dir('Tetris-V1') {
-                    dependencyCheck additionalArguments: '--scan ./ --disableYarnAudit --disableNodeAudit', odcInstallation: 'DP-Check'
-                    dependencyCheckPublisher pattern: '**/dependency-check-report.xml'
-                }
-            }
-        }
-        stage('Trivy File Scan') {
-            steps {
-                dir('Tetris-V1') {
-                    sh 'trivy fs . > trivyfs.txt'
-                }
-            }
-        }
-        stage("Docker Image Build") {
+stage("Docker Image Build") {
             steps {
                 script {
                     dir('Tetris-V1') {
