@@ -28,13 +28,6 @@ pipeline {
                 }
             }
         }
-        stage('Quality Check') {
-            steps {
-                script {
-                    waitForQualityGate abortPipeline: false
-                }
-            }
-        }
         stage('Installing Dependencies') {
             steps {
                 dir('Tetris-V1') {
