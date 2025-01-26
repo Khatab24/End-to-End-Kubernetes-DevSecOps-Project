@@ -28,13 +28,13 @@ pipeline {
             //    }
         //    }
   //      }
-        stage('Installing Dependencies') {
-            steps {
-                dir('Tetris-V1') {
-                    sh 'npm install'
-                }
-            }
-        }
+    //    stage('Installing Dependencies') {
+      //      steps {
+       //         dir('Tetris-V1') {
+       //             sh 'npm install'
+       //         }
+       //     }
+    //    }
         stage('OWASP Dependency-Check Scan') {
             steps {
                 dir('Tetris-V1') {
