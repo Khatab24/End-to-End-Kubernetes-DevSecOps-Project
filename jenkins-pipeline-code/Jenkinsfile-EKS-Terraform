@@ -1,6 +1,6 @@
 properties([
     parameters([
-        string(defaultValue: 'variables.tfvars', description: 'Specify the file name', name: 'File-Name'),
+        string(defaultValue: 'terraform.tfvars', description: 'Specify the file name', name: 'File-Name'),
         choice(choices: ['apply', 'destroy'], description: 'Select Terraform action', name: 'Terraform-Action')
     ])
 ])
@@ -10,13 +10,13 @@ pipeline {
     stages {
         stage('Checkout from Git') {
             steps {
-                git branch: 'master', url: 'https://github.com/AmanPathak-DevOps/End-to-End-Kubernetes-DevSecOps-Tetris-Project.git'
+                git branch: 'master', url: 'https://github.com/Khatab24/End-to-End-Kubernetes-DevSecOps-Project.git'
             }
         }
         stage('Initializing Terraform') {
             steps {
-                withAWS(credentials: 'aws-key', region: 'us-east-1') {
-                dir('EKS-TF') {
+                withAWS(credentials: 'AWSCRED', region: 'us-east-1') {
+                dir('eks') {
                     script {
                         sh 'terraform init'
                     }
@@ -26,8 +26,8 @@ pipeline {
         }
         stage('Validate Terraform Code') {
             steps {
-                withAWS(credentials: 'aws-key', region: 'us-east-1') {
-                dir('EKS-TF') {
+                withAWS(credentials: 'AWSCRED', region: 'us-east-1') {
+                dir('eks') {
                     script {
                         sh 'terraform validate'
                     }
@@ -37,8 +37,8 @@ pipeline {
         }
         stage('Terraform Plan') {
             steps {
-                withAWS(credentials: 'aws-key', region: 'us-east-1') {
-                dir('EKS-TF') {
+                withAWS(credentials: 'AWSCRED', region: 'us-east-1') {
+                dir('eks') {
                     script {
                         sh "terraform plan -var-file=${params.'File-Name'}"
                     }
@@ -48,13 +48,13 @@ pipeline {
         }
         stage('Terraform Action') {
             steps {
-                withAWS(credentials: 'aws-key', region: 'us-east-1') { 
+                withAWS(credentials: 'AWSCRED', region: 'us-east-1') { 
                 script {
                     echo "${params.'Terraform-Action'}"
-                    dir('EKS-TF') {
+                    dir('eks') {
                         script {
                             if (params.'Terraform-Action' == 'apply') {
-                                sh "terraform apply -auto-approve -var-file=${params.'File-Name'}"
+                                sh "terraform apply --auto-approve -var-file=${params.'File-Name'}"
                             } else if (params.'Terraform-Action' == 'destroy') {
                                 sh "terraform destroy -auto-approve -var-file=${params.'File-Name'}"
                             } else {
