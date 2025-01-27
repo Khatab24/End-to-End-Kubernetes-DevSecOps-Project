@@ -20,13 +20,7 @@ pipeline {
                 git branch: 'master', credentialsId: "${GITHUB_CREDENTIALS}", url: "${GITHUB_REPO}"
             }
         }
-        stage('Install Dependencies') { 
-            steps {
-                dir('Tetris-V1') {
-                    sh 'npm install'
-                }
-            }
-        }
+
         stage("Docker Image Build") {
             steps {
                 script {
