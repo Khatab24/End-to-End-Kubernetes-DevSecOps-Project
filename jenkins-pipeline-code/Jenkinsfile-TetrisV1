@@ -1,28 +1,41 @@
 pipeline {
-    agent any 
- //   tools {
-       // jdk 'jdk'
-     //   NodeJS 'NodeJS'
- //   }
-    environment  {
-        SCANNER_HOME=tool 'sonar-scanner'
+    agent any
+    tools {
+        jdk 'jdk'
+        nodejs 'nodejs'
+    }
+    environment {
+        SCANNER_HOME = tool 'sonar-scanner'
+        AWS_ACCOUNT_ID = credentials('AWSCRED')
+        AWS_DEFAULT_REGION = 'us-east-1'       
+        DOCKER_CREDENTIALS_ID = 'DOCKERHUB'
+        image_name = 'khatab24/tetrisv1'
+        GITHUB_REPO = 'https://github.com/Khatab24/End-to-End-Kubernetes-DevSecOps-Project.git'
+        GITHUB_CREDENTIALS = 'GITHUB_TOKEN'
     }
     stages {
-        stage('Cleaning Workspace') {
+        stage('Clean Workspace') {
             steps {
                 cleanWs()
             }
         }
-        stage('Checkout from Git') {
+        stage('Checkout Code') {
             steps {
-                git branch: 'master', url: 'https://github.com/Khatab24/End-to-End-Kubernetes-DevSecOps-Project.git'
+                git branch: 'master', credentialsId: "${GITHUB_CREDENTIALS}", url: "${GITHUB_REPO}"
             }
         }
-stage("Docker Image Build") {
+        stage('Install Dependencies') { 
+            steps {
+                dir('Tetris-V1') {
+                    sh 'npm install'
+                }
+            }
+        }
+        stage("Docker Image Build") {
             steps {
                 script {
                     dir('Tetris-V1') {
-                        withDockerRegistry(credentialsId: 'Dockerhub') {   
+                        withDockerRegistry(credentialsId: 'docker', toolName: 'docker') {   
                             sh 'docker system prune -f'
                             sh 'docker container prune -f'
                             sh 'docker build -t tetrisv1 .'
@@ -31,49 +44,47 @@ stage("Docker Image Build") {
                 }
             }
         }
-        stage("Docker Image Pushing") {
+        stage('Sonarqube Analysis') {
             steps {
-                script {
-                    withDockerRegistry(credentialsId: 'Dockerhub') {   
-                        sh 'docker tag tetrisv1 khatab24/tetrisv1:${BUILD_NUMBER}'
-                        sh 'docker push khatab24/tetrisv1:${BUILD_NUMBER}'
+                dir('Tetris-V1') {
+                    withSonarQubeEnv('sonar-server') {
+                        sh ''' $SCANNER_HOME/bin/sonar-scanner -Dsonar.projectName=TetrisVersion1.0 \
+                        -Dsonar.projectKey=TetrisVersion1.0 '''
                     }
                 }
             }
         }
-     //   stage("TRIVY Image Scan") {
-     //       steps {
-      //          sh 'trivy image khatab24/tetrisv1:${BUILD_NUMBER} > trivyimage.txt' 
-     //       }
-     //   }
-        stage('Checkout Code') {
+        stage('Trivy File Scan') {
             steps {
-                git branch: 'master', url: 'https://github.com/Khatab24/End-to-End-Kubernetes-DevSecOps-Project.git'
+                dir('Tetris-V1') {
+                    sh 'trivy fs . > trivyfs.txt'
+                }
             }
         }
-        stage('Update Image in deployment.yml') {
+        stage("Docker Image Pushing") {
             steps {
                 script {
-                    def repoUrl = 'https://github.com/Khatab24/End-to-End-Kubernetes-DevSecOps-Project.git'
-                    def branch = 'master'
-                    def deploymentFile = 'deployment.yml'
-                    def newImage = 'khatab24/tetrisv1:new-version' 
-
-                    checkout([$class: 'GitSCM', branches: [[name: branch]], userRemoteConfigs: [[url: repoUrl]]])
-
-                    def deploymentContent = readFile(file: deploymentFile)
-                    deploymentContent = deploymentContent.replaceAll(/(image:\s*)(.*)/, "\$1${newImage}")
-                    writeFile(file: deploymentFile, text: deploymentContent)
-
-                    // Commit and push the changes
-                    withCredentials([usernamePassword(credentialsId: 'GITHUB', usernameVariable: 'khatab24', passwordVariable: 'GIT_PASSWORD')]) {
-                        sh """
-                            git config --global user.name "Khatab24"
-                            git config --global user.email "khatabahmed245@gmail.com"
-                            git add ${deploymentFile}
-                            git commit -m "Updated image to ${newImage}"
-                            git push https://${GIT_USERNAME}:${GIT_PASSWORD}@github.com/Khatab24/End-to-End-Kubernetes-DevSecOps-Project.git ${branch}
-                        """
+                    withDockerRegistry(credentialsId: 'Dockerhub') {   
+                        sh "docker tag tetrisv1 ${image_name}:${BUILD_NUMBER}"
+                        sh "docker push ${image_name}:${BUILD_NUMBER}"
+                    }
+                }
+            }
+        }
+        stage('Update Kubernetes Manifests') {
+            steps {
+                dir('Manifest-file/') {
+                    script {
+                        withCredentials([usernamePassword(credentialsId: "${GITHUB_CREDENTIALS}", usernameVariable: 'GIT_USERNAME', passwordVariable: 'GIT_PASSWORD')]) {
+                            sh """
+                                git config --global user.name "Khatab24"
+                                git config --global user.email "khatabahmed245@gmail.com"
+                                sed -i "s|image: .*|image: ${image_name}:${BUILD_NUMBER}|" deployment-service.yml
+                                git add deployment-service.yml
+                                git commit -m "Update Frontend Deployment Image to ${BUILD_NUMBER}"
+                                git push https://${GIT_USERNAME}:${GIT_PASSWORD}@github.com/Khatab24/End-to-End-Kubernetes-DevSecOps-Project.git master
+                            """
+                        }
                     }
                 }
             }
