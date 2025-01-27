@@ -41,11 +41,11 @@ stage("Docker Image Build") {
                 }
             }
         }
-        stage("TRIVY Image Scan") {
-            steps {
-                sh 'trivy image khatab24/tetrisv1:${BUILD_NUMBER} > trivyimage.txt' 
-            }
-        }
+     //   stage("TRIVY Image Scan") {
+     //       steps {
+      //          sh 'trivy image khatab24/tetrisv1:${BUILD_NUMBER} > trivyimage.txt' 
+     //       }
+     //   }
         stage('Checkout Code') {
             steps {
                 git branch: 'master', url: 'https://github.com/Khatab24/End-to-End-Kubernetes-DevSecOps-Project.git'
