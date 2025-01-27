@@ -43,11 +43,3 @@ Welcome to an immersive DevSecOps learning experience! This project guides you t
 7. **SonarQube:** Unveiling code quality insights
 8. **Terraform:** Infrastructure as Code for AWS EKS
 
-## Blog Implementation 📝
-   To implement this project, follow the step-by-step guide in our detailed [blog post](https://amanpathakdevops.medium.com/devsecops-mastery-a-step-by-step-guide-to-deploying-tetris-on-aws-eks-with-jenkins-and-argocd-3adcf21b3120). Learn how each tool plays a crucial role in achieving DevSecOps excellence.
-
-## Acknowledgments 🙌
-   Special thanks to the open-source community and the contributors who make learning and collaboration an incredible journey.
-
-## License 📄
-   This project is licensed under the Apache-2.0 license see the [LICENSE](http://www.apache.org/licenses/) file for details.
