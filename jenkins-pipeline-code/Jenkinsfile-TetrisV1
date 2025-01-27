@@ -51,26 +51,29 @@ stage("Docker Image Build") {
                 git branch: 'master', url: 'https://github.com/Khatab24/End-to-End-Kubernetes-DevSecOps-Project.git'
             }
         }
-        stage('Update Deployment file') {
-            environment {
-                GIT_REPO_NAME = "End-to-End-Kubernetes-DevSecOps-Project"
-                GIT_USER_NAME = "Khatab24"
-            }
+        stage('Update Image in deployment.yml') {
             steps {
-                dir('Manifest-file') {
-                    withCredentials([string(credentialsId: 'GITHUB', variable: 'GITHUB_TOKEN')]) {
-                        sh '''
-                            git config user.email "khatabahmed245@gmail.com"
-                            git config user.name "Khatab24"
-                            BUILD_NUMBER=${BUILD_NUMBER}
-                            echo $BUILD_NUMBER
-                            imageTag=$(grep -oP '(?<=tetrisv1:)[^ ]+' deployment-service.yml)
-                            echo $imageTag
-                            sed -i "s/tetrisv1:${imageTag}/tetrisv1:${BUILD_NUMBER}/" deployment-service.yml
-                            git add deployment-service.yml
-                            git commit -m "Update deployment Image to version \${BUILD_NUMBER}"
-                            git push https://${GITHUB_TOKEN}@github.com/${GIT_USER_NAME}/${GIT_REPO_NAME} HEAD:master
-                        '''
+                script {
+                    def repoUrl = 'https://github.com/Khatab24/End-to-End-Kubernetes-DevSecOps-Project.git'
+                    def branch = 'master'
+                    def deploymentFile = 'deployment.yml'
+                    def newImage = 'khatab24/tetrisv1:new-version' 
+
+                    checkout([$class: 'GitSCM', branches: [[name: branch]], userRemoteConfigs: [[url: repoUrl]]])
+
+                    def deploymentContent = readFile(file: deploymentFile)
+                    deploymentContent = deploymentContent.replaceAll(/(image:\s*)(.*)/, "\$1${newImage}")
+                    writeFile(file: deploymentFile, text: deploymentContent)
+
+                    // Commit and push the changes
+                    withCredentials([usernamePassword(credentialsId: 'GITHUB', usernameVariable: 'khatab24', passwordVariable: 'GIT_PASSWORD')]) {
+                        sh """
+                            git config --global user.name "Khatab24"
+                            git config --global user.email "khatabahmed245@gmail.com"
+                            git add ${deploymentFile}
+                            git commit -m "Updated image to ${newImage}"
+                            git push https://${GIT_USERNAME}:${GIT_PASSWORD}@github.com/Khatab24/End-to-End-Kubernetes-DevSecOps-Project.git ${branch}
+                        """
                     }
                 }
             }
