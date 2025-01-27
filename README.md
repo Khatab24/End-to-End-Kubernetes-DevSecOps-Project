@@ -10,7 +10,7 @@
 ![Terraform](https://img.shields.io/badge/Terraform-Infrastructure%20as%20Code-9cf)
 
 
-![Infrastructure Diagram](assets/Infra.gif)
+
 
 Welcome to an immersive DevSecOps learning experience! This project guides you through deploying a Tetris game on AWS EKS while mastering the art of DevSecOps.
 
